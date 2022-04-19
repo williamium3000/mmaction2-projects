@@ -1,4 +1,4 @@
-_base_ = ['../../_base_/default_runtime.py']
+_base_ = ['../../mmaction2_configs/_base_/default_runtime.py']
 
 # model settings
 model = dict(
@@ -23,18 +23,19 @@ model = dict(
 
 # dataset settings
 dataset_type = 'VideoDataset'
-data_root = 'data/washing_hands/videos_train'
-data_root_val = 'data/washing_hands/videos_val'
-ann_file_train = 'data/washing_hands/washing_hands_train_list_videos.txt'
-ann_file_val = 'data/washing_hands/washing_hands_val_list_videos.txt'
-ann_file_test = 'data/washing_hands/washing_hands_val_list_videos.txt'
+data_root = 'data/wash_hands/'
+data_root_val = 'data/wash_hands/'
+ann_file_train = 'data/wash_hands/all_train@0.2.txt'
+ann_file_val = 'data/wash_hands/all_test@0.2.txt'
+ann_file_test = 'data/wash_hands/all_test@0.2.txt'
 
 img_norm_cfg = dict(
     mean=[127.5, 127.5, 127.5], std=[127.5, 127.5, 127.5], to_bgr=False)
 
 train_pipeline = [
+    dict(type="DecordInit"),
     dict(type='SampleFrames', clip_len=8, frame_interval=32, num_clips=1),
-    dict(type='RawFrameDecode'),
+    dict(type="DecordDecode"),
     dict(type='RandomRescale', scale_range=(256, 320)),
     dict(type='RandomCrop', size=224),
     dict(type='Flip', flip_ratio=0.5),
@@ -44,13 +45,14 @@ train_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 val_pipeline = [
+    dict(type="DecordInit"),
     dict(
         type='SampleFrames',
         clip_len=8,
         frame_interval=32,
         num_clips=1,
         test_mode=True),
-    dict(type='RawFrameDecode'),
+    dict(type="DecordDecode"),
     dict(type='Resize', scale=(-1, 256)),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
@@ -59,13 +61,14 @@ val_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 test_pipeline = [
+    dict(type="DecordInit"),
     dict(
         type='SampleFrames',
         clip_len=8,
         frame_interval=32,
         num_clips=1,
         test_mode=True),
-    dict(type='RawFrameDecode'),
+    dict(type="DecordDecode"),
     dict(type='Resize', scale=(-1, 224)),
     dict(type='ThreeCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
@@ -120,3 +123,9 @@ total_epochs = 15
 # runtime settings
 checkpoint_config = dict(interval=1)
 work_dir = './work_dirs/washing_hands/timesformer_divST_8x32x1_15e_rgb_all'
+log_config = dict(
+    interval=2,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        # dict(type='TensorboardLoggerHook'),
+    ])
